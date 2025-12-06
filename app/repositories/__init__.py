@@ -1,1 +1,6 @@
 from .base import BaseRepository
+from .director_repository import DirectorRepository
+from .genre_repository import GenreRepository
+from .movie_genre_repository import MovieGenreRepository
+from .movie_rating_repository import MovieRatingRepository
+from .movie_repository import MovieRepository
