@@ -1,0 +1,21 @@
+[project]
+name = "movieratingsystem"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "KasraMousapour",email = "kasramousapour84@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "psycopg2 (>=2.9.11,<3.0.0)",
+    "sqlalchemy (>=2.0.44,<3.0.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "fastapi (>=0.123.10,<0.124.0)",
+    "uvicorn (>=0.38.0,<0.39.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
