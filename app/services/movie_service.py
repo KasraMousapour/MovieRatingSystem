@@ -1,25 +1,47 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from app.repositories.movie_repository import MovieRepository
-from app.models import Movie
+from app.models import *
 
 class MovieService:
     def __init__(self, session: Session):
         self.session = session
         self.movie_repo = MovieRepository(session)
 
-    def list_movies(self, page: int = 1, page_size: int = 10):
+    def list_movies(
+        self,
+        title: str = None,
+        director_name: str = None,
+        genre_name: str = None,
+        release_year: int = None,
+        page: int = 1,
+        page_size: int = 10
+    ):
         """
-        Return paginated list of movies.
+        Search and filter movies with pagination.
         """
-        # calculate offset
+        query = self.session.query(Movie)
+
+        # filter by title (case-insensitive)
+        if title:
+            query = query.filter(Movie.title.ilike(f"%{title}%"))
+
+        # filter by director
+        if director_name:
+            query = query.join(Director).filter(Director.name.ilike(f"%{director_name}%"))
+
+        # filter by genre
+        if genre_name:
+            query = query.join(MovieGenre).join(Genre).filter(Genre.name.ilike(f"%{genre_name}%"))
+
+        # filter by release year
+        if release_year:
+            query = query.filter(Movie.release_year == release_year)
+
+        # pagination
+        total_count = query.count()
         offset = (page - 1) * page_size
-
-        # query movies with limit + offset
-        movies_query = self.session.query(Movie).offset(offset).limit(page_size)
-        movies = movies_query.all()
-
-        # total count for pagination metadata
-        total_count = self.session.query(Movie).count()
+        movies = query.offset(offset).limit(page_size).all()
 
         return {
             "page": page,
