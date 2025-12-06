@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from db.base import Base
 
@@ -11,6 +11,10 @@ class Movie(Base):
     description = Column(Text)
     director_id = Column(Integer, ForeignKey("directors.id"))
     cast = Column(Text)  
+
+    # aggregated rating fields
+    avg_rating = Column(Float, default=0.0)       # average score
+    rating_count = Column(Integer, default=0)     # number of ratings
 
     director = relationship("Director")
     genres = relationship("MovieGenre", back_populates="movie")
