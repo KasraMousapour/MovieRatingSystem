@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload,
 from sqlalchemy import and_
 from app.repositories.movie_repository import MovieRepository
 from app.models import *
@@ -49,3 +49,20 @@ class MovieService:
             "total_items": total_count,
             "items": movies
         }
+    
+    def get_movie_detail(self, movie_id: int):
+        """
+        Fetch detailed information about a specific movie.
+        Includes director, genres, and rating aggregates.
+        """
+        movie = (
+            self.session.query(Movie)
+            .options(
+                joinedload(Movie.director),
+                joinedload(Movie.genres).joinedload("genre"),
+                joinedload(Movie.ratings)
+            )
+            .filter(Movie.id == movie_id)
+            .first()
+        )
+        return movie
