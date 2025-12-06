@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, joinedload,
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_
 from app.repositories.movie_repository import MovieRepository
 from app.models import *
