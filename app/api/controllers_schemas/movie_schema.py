@@ -1,3 +1,4 @@
+import datetime
 from pydantic import BaseModel, Field
 from typing import List
 from .director_schema import DirectorSchema
@@ -25,3 +26,9 @@ class MovieResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class MovieUpdate(MovieCreate):
+    pass
+
+class MovieUpdateResponse(MovieResponse):
+    updated_at: datetime
