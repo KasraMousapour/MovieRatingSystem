@@ -211,4 +211,5 @@ class MovieService:
             "movie_rating": rating.id,
             "movie_id": movie_id,
             "score": score,
+            "created_at": rating.created_at
         }

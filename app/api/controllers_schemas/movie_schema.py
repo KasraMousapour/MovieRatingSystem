@@ -49,6 +49,7 @@ class MovieRatingResponse(BaseModel):
     rating_id: int
     movie_id: int
     score: int
+    created_at:datetime
        
 
     class Config:
