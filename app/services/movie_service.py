@@ -173,3 +173,42 @@ class MovieService:
         movie = self.movie_repo.update(movie, **{k: v for k, v in data.items() if k != "genres"})
 
         return movie
+    
+    def delete_movie(self, movie_id: int) -> bool:
+        # 1. Validate movie exists
+        movie = self.movie_repo.get(Movie, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        # 2. Delete related movie_genres
+        self.session.query(MovieGenre).filter(MovieGenre.movie_id == movie_id).delete()
+
+        # 3. Delete related movie_ratings
+        self.session.query(MovieRating).filter(MovieRating.movie_id == movie_id).delete()
+
+        # 4. Delete movie itself
+        self.movie_repo.delete(movie)
+
+        return True
+    
+    def submit_rating(self, movie_id: int, score: int):
+        # 1. Validate movie exists
+        movie = self.movie_repo.get(Movie, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        # 2. Validate score range (already enforced by schema, but double-check)
+        if score < 1 or score > 10:
+            raise HTTPException(status_code=400, detail="Score must be between 1 and 10")
+
+        # 3. Add rating entry
+        rating = self.rating_repo.create(movie_id=movie_id, score=score)
+
+        # 4. Update movie aggregates
+        self.movie_repo.update_rating_aggregates(movie_id, score)
+
+        return {
+            "movie_rating": rating.id,
+            "movie_id": movie_id,
+            "score": score,
+        }

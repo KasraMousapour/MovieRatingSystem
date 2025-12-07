@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.services.movie_service import MovieService
-from api.controllers_schemas.movie_schema import MovieResponse, MovieCreate, MovieUpdate, MovieUpdateResponse, MoviePatch
+from api.controllers_schemas.movie_schema import *
 from datetime import datetime
 
 router = APIRouter()
@@ -62,3 +62,16 @@ def patch_movie(movie_id: int, payload: MoviePatch, session: Session = Depends(g
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
     return movie
+
+@router.delete("/{movie_id}", status_code=204)
+def delete_movie(movie_id: int, session: Session = Depends(get_db)):
+    service = MovieService(session)
+    success = service.delete_movie(movie_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Movie not found")
+    return None  # 204 No Content
+@router.post("/{movie_id}/rating", response_model=MovieRatingResponse)
+def rate_movie(movie_id: int, payload: MovieRatingCreate, session: Session = Depends(get_db)):
+    service = MovieService(session)
+    return service.submit_rating(movie_id, payload.score)
+

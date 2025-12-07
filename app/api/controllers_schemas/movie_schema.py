@@ -41,3 +41,15 @@ class MoviePatch(BaseModel):
     director_id: Optional[int] = Field(None, ge=1)
     cast: Optional[str] = Field(None, min_length=1)
     genres: Optional[List[int]] = Field(None, min_items=1)    
+
+class MovieRatingCreate(BaseModel):
+    score: int = Field(..., ge=1, le=10)  # must be between 1 and 10
+
+class MovieRatingResponse(BaseModel):
+    rating_id: int
+    movie_id: int
+    score: int
+       
+
+    class Config:
+        orm_mode = True
