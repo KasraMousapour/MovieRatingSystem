@@ -138,3 +138,38 @@ class MovieService:
             self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
 
         return movie
+    
+    def patch_movie(self, movie_id: int, data: dict) -> Movie:
+        # 1. Validate movie exists
+        movie = self.movie_repo.get(Movie, movie_id)
+        if not movie:
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        # 2. Validate director if provided
+        if data.get("director_id") is not None:
+            director = self.director_repo.session.query(
+                self.director_repo.session.query(Movie).mapper.class_
+            ).filter_by(id=data["director_id"]).first()
+            if not director:
+                raise HTTPException(status_code=400, detail="Invalid director_id")
+
+        # 3. Validate genres if provided
+        if data.get("genres") is not None:
+            valid_genres = []
+            for genre_id in data["genres"]:
+                genre = self.genre_repo.session.query(
+                    self.genre_repo.session.query(Movie).mapper.class_
+                ).filter_by(id=genre_id).first()
+                if not genre:
+                    raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
+                valid_genres.append(genre)
+
+            # refresh movie_genres links
+            self.session.query(MovieGenre).filter(MovieGenre.movie_id == movie.id).delete()
+            for genre in valid_genres:
+                self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
+
+        # 4. Update only provided fields
+        movie = self.movie_repo.update(movie, **{k: v for k, v in data.items() if k != "genres"})
+
+        return movie

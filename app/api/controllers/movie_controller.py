@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.services.movie_service import MovieService
-from api.controllers_schemas.movie_schema import MovieResponse, MovieCreate, MovieUpdate, MovieUpdateResponse
+from api.controllers_schemas.movie_schema import MovieResponse, MovieCreate, MovieUpdate, MovieUpdateResponse, MoviePatch
 from datetime import datetime
 
 router = APIRouter()
@@ -53,4 +53,12 @@ def update_movie(movie_id: int, payload: MovieUpdate, session: Session = Depends
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
     movie["updated_at"] = datetime.now()
+    return movie
+
+@router.patch("/{movie_id}", response_model=MovieResponse)
+def patch_movie(movie_id: int, payload: MoviePatch, session: Session = Depends(get_db)):
+    service = MovieService(session)
+    movie = service.patch_movie(movie_id, payload.dict(exclude_unset=True))
+    if not movie:
+        raise HTTPException(status_code=404, detail="Movie not found")
     return movie

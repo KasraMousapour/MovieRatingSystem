@@ -1,6 +1,6 @@
 import datetime
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 from .director_schema import DirectorSchema
 from .genre_schema import GenreSchema
 
@@ -32,3 +32,12 @@ class MovieUpdate(MovieCreate):
 
 class MovieUpdateResponse(MovieResponse):
     updated_at: datetime
+
+class MoviePatch(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    release_year: Optional[int] = Field(None, ge=1888, le=2100)
+    description: Optional[str] = Field(None, min_length=1)
+    duration_minutes: Optional[int] = Field(None, ge=1)
+    director_id: Optional[int] = Field(None, ge=1)
+    cast: Optional[str] = Field(None, min_length=1)
+    genres: Optional[List[int]] = Field(None, min_items=1)    
