@@ -179,7 +179,7 @@ GROUP BY mv.id, g.id;
 
 ------------------------------- 10. Generate fake ratings for each movie -----------------------------
 -- Each movie gets between 1 and 40 random ratings
-INSERT INTO movie_ratings (movie_id, score, rated_at)
+INSERT INTO movie_ratings (movie_id, score, created_at)
 SELECT
     m.id,
     (floor(random() * 10) + 1)::INT AS score, -- Random score 1-10
