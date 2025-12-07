@@ -1,14 +1,14 @@
 # api/controllers/movie_controller.py
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.services.movie_service import MovieService
+from db.session import get_db
+from services.movie_service import MovieService
 from api.controllers_schemas.movie_schema import *
 from datetime import datetime
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 def list_movies(
     title: str = Query(None),
     director_name: str = Query(None),

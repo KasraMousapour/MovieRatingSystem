@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_
 from fastapi import HTTPException
-from app.repositories import *
-from app.models import *
+from repositories import *
+from models import *
 
 class MovieService:
     def __init__(self, session: Session):

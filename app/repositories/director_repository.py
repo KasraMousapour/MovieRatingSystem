@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.director import Director
-from app.repositories import BaseRepository
+from models.director import Director
+from repositories import BaseRepository
 
 class DirectorRepository(BaseRepository):
     def __init__(self, session: Session):
