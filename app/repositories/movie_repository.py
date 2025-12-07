@@ -1,6 +1,6 @@
 # app/repositories/movie_repository.py
 from sqlalchemy.orm import Session
-from app.models.movie import Movie
+from app.models import Movie
 from app.repositories import BaseRepository
 
 class MovieRepository(BaseRepository):

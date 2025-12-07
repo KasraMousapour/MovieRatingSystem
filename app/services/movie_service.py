@@ -1,12 +1,16 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_
-from app.repositories.movie_repository import MovieRepository
+from fastapi import HTTPException
+from app.repositories import *
 from app.models import *
 
 class MovieService:
     def __init__(self, session: Session):
         self.session = session
         self.movie_repo = MovieRepository(session)
+        self.director_repo = DirectorRepository(session)
+        self.genre_repo = GenreRepository(session)
+        self.movie_genre_repo = MovieGenreRepository(session)
 
     def list_movies(
         self,
@@ -65,4 +69,35 @@ class MovieService:
             .filter(Movie.id == movie_id)
             .first()
         )
+        return movie
+    
+    def create_movie(self, data: dict) -> Movie:
+        # 1. Validate director exists
+        director = self.director_repo.get(model=self.director_repo.session.query(Movie).mapper.class_, entity_id=data["director_id"])
+        director = self.director_repo.session.query(self.director_repo.session.query(Movie).mapper.class_).filter_by(id=data["director_id"]).first()
+        if not director:
+            raise HTTPException(status_code=400, detail="Invalid director_id")
+
+        # 2. Validate genres exist
+        valid_genres = []
+        for genre_id in data["genres"]:
+            genre = self.genre_repo.get(model=self.genre_repo.session.query(Movie).mapper.class_, entity_id=genre_id)
+            genre = self.genre_repo.session.query(self.genre_repo.session.query(Movie).mapper.class_).filter_by(id=genre_id).first()
+            if not genre:
+                raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
+            valid_genres.append(genre)
+
+        # 3. Create movie
+        movie = self.movie_repo.create(
+            title=data["title"],
+            release_year=data["release_year"],
+            description=data["description"],
+            director_id=data["director_id"],
+            cast=data["cast"],
+        )
+
+        # 4. Add movie-genre connections
+        for genre in valid_genres:
+            self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
+
         return movie
