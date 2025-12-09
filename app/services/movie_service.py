@@ -63,13 +63,25 @@ class MovieService:
             self.session.query(Movie)
             .options(
                 joinedload(Movie.director),
-                joinedload(Movie.genres).joinedload("genre"),
-                joinedload(Movie.ratings)
+                joinedload(Movie.genres).joinedload(MovieGenre.genre)
             )
             .filter(Movie.id == movie_id)
             .first()
         )
-        return movie
+
+        if not movie:
+            return None
+        
+        return {
+            "id": movie.id,
+            "title": movie.title,
+            "release_year": movie.release_year,
+            "director": movie.director,
+            "genres": [mg.genre.name for mg in movie.genres],
+            "cast": movie.cast,
+            "average_rating": movie.avg_rating,
+            "ratings_count": movie.rating_count,
+        }
     
     def create_movie(self, data: dict) -> Movie:
         # 1. Validate director exists

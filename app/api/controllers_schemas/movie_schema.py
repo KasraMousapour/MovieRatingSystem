@@ -16,13 +16,11 @@ class MovieResponse(BaseModel):
     id: int
     title: str
     release_year: int
-    description: str
-    cast: str
-    avg_rating: float
-    rating_count: int
-    director_id: int
     director: DirectorSchema
-    genres: List[int]
+    genres: List[str]
+    cast: str
+    average_rating: float
+    ratings_count: int
 
     class Config:
         from_attributes = True
