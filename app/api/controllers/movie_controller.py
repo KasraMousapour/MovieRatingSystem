@@ -14,8 +14,6 @@ def list_movies(
     director_name: str = Query(None),
     genre_name: str = Query(None),
     release_year: int = Query(None),
-    min_rating: float = Query(None),
-    max_rating: float = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     session: Session = Depends(get_db)
@@ -26,8 +24,6 @@ def list_movies(
         director_name=director_name,
         genre_name=genre_name,
         release_year=release_year,
-        min_rating=min_rating,
-        max_rating=max_rating,
         page=page,
         page_size=page_size
     )
