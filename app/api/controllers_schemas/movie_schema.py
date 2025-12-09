@@ -25,7 +25,7 @@ class MovieResponse(BaseModel):
     genres: List[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class MovieUpdate(MovieCreate):
     pass
@@ -53,4 +53,4 @@ class MovieRatingResponse(BaseModel):
        
 
     class Config:
-        orm_mode = True
+        from_attributes = True
