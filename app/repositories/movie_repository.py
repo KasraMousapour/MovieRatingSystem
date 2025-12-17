@@ -7,7 +7,7 @@ class MovieRepository(BaseRepository):
     def __init__(self, session: Session):
         super().__init__(session)
 
-    def create(self, title, release_year, description, director_id, cast):
+    def create(self, title, release_year, description, director_id, cast) -> Movie:
         movie = Movie(
             title=title,
             release_year=release_year,
@@ -17,16 +17,16 @@ class MovieRepository(BaseRepository):
         )
         return self.add(movie)
 
-    def get_by_title(self, title: str):
+    def get_by_title(self, title: str) -> Movie:
         return self.session.query(Movie).filter(Movie.title == title).first()
 
-    def update_movie(self, movie_id: int, **kwargs):
+    def update_movie(self, movie_id: int, **kwargs) -> Movie | None:
         movie = self.get(Movie, movie_id)
         if not movie:
             return None
         return self.update(movie, **kwargs)
 
-    def update_rating_aggregates(self, movie_id: int, new_score: int):
+    def update_rating_aggregates(self, movie_id: int, new_score: int) -> Movie:
         movie = self.get(Movie, movie_id)
         if not movie:
             return None

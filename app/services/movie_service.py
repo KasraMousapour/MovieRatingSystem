@@ -159,7 +159,7 @@ class MovieService:
         )
 
         # 5. Refresh movie_genres links
-        self.session.query(MovieGenre).filter(MovieGenre.movie_id == movie.id).delete()
+        self.movie_genre_repo.session.query(MovieGenre).filter(MovieGenre.movie_id == movie.id).delete()
         for genre in valid_genres:
             self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
 
@@ -179,13 +179,13 @@ class MovieService:
         # 1. Validate movie exists
         movie = self.movie_repo.get(Movie, movie_id)
         if not movie:
-            raise HTTPException(status_code=404, detail="Movie not found")
+            raise LookupError("Movie not found")
 
         # 2. Validate director if provided
         if data.get("director_id") is not None:
             director = self.director_repo.get(Director, data["director_id"])
             if not director:
-                raise HTTPException(status_code=400, detail="Invalid director_id")
+                raise ValueError("Invalid director_id")
 
         # 3. Validate genres if provided
         if data.get("genres") is not None:
@@ -193,11 +193,11 @@ class MovieService:
             for genre_id in data["genres"]:
                 genre = self.genre_repo.get(Genre, genre_id)
                 if not genre:
-                    raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
+                    raise ValueError(f"Invalid genre_id: {genre_id}")
                 valid_genres.append(genre)
 
             # refresh movie_genres links
-            self.session.query(MovieGenre).filter(MovieGenre.movie_id == movie.id).delete()
+            self.movie_genre_repo.session.query(MovieGenre).filter(MovieGenre.movie_id == movie.id).delete()
             for genre in valid_genres:
                 self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
 
@@ -219,13 +219,13 @@ class MovieService:
         # 1. Validate movie exists
         movie = self.movie_repo.get(Movie, movie_id)
         if not movie:
-            raise HTTPException(status_code=404, detail="Movie not found")
+            raise LookupError("Movie not found")
 
         # 2. Delete related movie_genres
-        self.session.query(MovieGenre).filter(MovieGenre.movie_id == movie_id).delete()
+        self.movie_genre_repo.session.query(MovieGenre).filter(MovieGenre.movie_id == movie_id).delete()
 
         # 3. Delete related movie_ratings
-        self.session.query(MovieRating).filter(MovieRating.movie_id == movie_id).delete()
+        self.rating_repo.session.query(MovieRating).filter(MovieRating.movie_id == movie_id).delete()
 
         # 4. Delete movie itself
         self.movie_repo.delete(movie)
@@ -236,11 +236,11 @@ class MovieService:
         # 1. Validate movie exists
         movie = self.movie_repo.get(Movie, movie_id)
         if not movie:
-            raise HTTPException(status_code=404, detail="Movie not found")
+            raise LookupError("Movie not found")
 
         # 2. Validate score range (already enforced by schema, but double-check)
         if score < 1 or score > 10:
-            raise HTTPException(status_code=400, detail="Score must be between 1 and 10")
+            raise ValueError("Score must be between 1 and 10")
 
         # 3. Add rating entry
         rating = self.rating_repo.create(movie_id=movie_id, score=score)
