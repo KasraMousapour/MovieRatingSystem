@@ -102,7 +102,7 @@ class MovieService:
         for genre_id in data["genres"]:
             genre = self.genre_repo.get(Genre, genre_id)
             if not genre:
-                raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
+                raise ValueError(f"Invalid genre_id: {genre_id}")
             valid_genres.append(genre)
 
         # 3. Create movie
@@ -133,19 +133,19 @@ class MovieService:
         # 1. Validate movie exists
         movie = self.movie_repo.get(Movie, movie_id)
         if not movie:
-            raise HTTPException(status_code=404, detail="Movie not found")
+            raise LookupError("Movie not found")
 
         # 2. Validate director exists
         director = self.director_repo.get(Director, data["director_id"])
         if not director:
-            raise HTTPException(status_code=400, detail="Invalid director_id")
+            raise ValueError("Invalid director_id")
 
         # 3. Validate genres
         valid_genres = []
         for genre_id in data["genres"]:
             genre = self.genre_repo.get(Genre, genre_id)
             if not genre:
-                raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
+                raise ValueError(f"Invalid genre_id: {genre_id}")
             valid_genres.append(genre)
 
         # 4. Update movie fields
