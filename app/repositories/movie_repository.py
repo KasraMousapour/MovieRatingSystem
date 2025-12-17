@@ -1,6 +1,6 @@
 # app/repositories/movie_repository.py
-from sqlalchemy.orm import Session
-from models import Movie
+from sqlalchemy.orm import Session, joinedload
+from models import Movie, MovieGenre
 from repositories import BaseRepository
 
 class MovieRepository(BaseRepository):
@@ -35,3 +35,14 @@ class MovieRepository(BaseRepository):
         movie.avg_rating = (total_score + new_score) / movie.rating_count
         self.session.commit()
         return movie
+    
+    def join_with_genres(self):
+        query = self.session.query(Movie).options(joinedload(Movie.genres).joinedload(MovieGenre.genre))
+        return query
+    
+    def join_with_director_and_genres(self):
+        query =  self.session.query(Movie).options(
+                joinedload(Movie.director),
+                joinedload(Movie.genres).joinedload(MovieGenre.genre)
+            )
+        return query

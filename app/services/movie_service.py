@@ -5,12 +5,13 @@ from repositories import *
 from models import *
 
 class MovieService:
-    def __init__(self, session: Session):
-        self.session = session
-        self.movie_repo = MovieRepository(session)
-        self.director_repo = DirectorRepository(session)
-        self.genre_repo = GenreRepository(session)
-        self.movie_genre_repo = MovieGenreRepository(session)
+    def __init__(self, movie_repo: MovieRepository, director_repo: DirectorRepository, 
+                 genre_repo: GenreRepository, movie_genre_repo: MovieGenreRepository, rating_repo: MovieRatingRepository):
+        self.movie_repo = movie_repo
+        self.director_repo = director_repo
+        self.genre_repo = genre_repo
+        self.movie_genre_repo = movie_genre_repo
+        self.rating_repo = rating_repo
 
     def list_movies(
         self,
@@ -24,7 +25,7 @@ class MovieService:
         """
         Search and filter movies with pagination.
         """
-        query = self.session.query(Movie)
+        query = self.movie_repo.join_with_genres()
 
         # filter by title (case-insensitive)
         if title:
@@ -47,11 +48,26 @@ class MovieService:
         offset = (page - 1) * page_size
         movies = query.offset(offset).limit(page_size).all()
 
+            # transform ORM objects into dicts with genre names
+        items = [
+            {
+                "id": m.id,
+                "title": m.title,
+                "release_year": m.release_year,
+                "director": m.director,
+                "genres": [mg.genre.name for mg in m.genres],
+                "cast": m.cast,
+                "average_rating": m.avg_rating,
+                "ratings_count": m.rating_count,
+            }
+            for m in movies
+        ]
+
         return {
             "page": page,
             "page_size": page_size,
             "total_items": total_count,
-            "items": movies
+            "items": items
         }
     
     def get_movie_detail(self, movie_id: int):
@@ -59,15 +75,7 @@ class MovieService:
         Fetch detailed information about a specific movie.
         Includes director, genres, and rating aggregates.
         """
-        movie = (
-            self.session.query(Movie)
-            .options(
-                joinedload(Movie.director),
-                joinedload(Movie.genres).joinedload(MovieGenre.genre)
-            )
-            .filter(Movie.id == movie_id)
-            .first()
-        )
+        movie = self.movie_repo.join_with_director_and_genres().filter(Movie.id == movie_id).first()
 
         if not movie:
             return None
@@ -85,16 +93,14 @@ class MovieService:
     
     def create_movie(self, data: dict) -> Movie:
         # 1. Validate director exists
-        director = self.director_repo.get(model=self.director_repo.session.query(Movie).mapper.class_, entity_id=data["director_id"])
-        director = self.director_repo.session.query(self.director_repo.session.query(Movie).mapper.class_).filter_by(id=data["director_id"]).first()
+        director = self.director_repo.get(Director, data["director_id"])
         if not director:
-            raise HTTPException(status_code=400, detail="Invalid director_id")
+            raise ValueError("Invalid director_id")
 
         # 2. Validate genres exist
         valid_genres = []
         for genre_id in data["genres"]:
-            genre = self.genre_repo.get(model=self.genre_repo.session.query(Movie).mapper.class_, entity_id=genre_id)
-            genre = self.genre_repo.session.query(self.genre_repo.session.query(Movie).mapper.class_).filter_by(id=genre_id).first()
+            genre = self.genre_repo.get(Genre, genre_id)
             if not genre:
                 raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
             valid_genres.append(genre)
@@ -112,7 +118,16 @@ class MovieService:
         for genre in valid_genres:
             self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
 
-        return movie
+        return {
+            "id": movie.id,
+            "title": movie.title,
+            "release_year": movie.release_year,
+            "director": movie.director,
+            "genres": [mg.genre.name for mg in movie.genres],
+            "cast": movie.cast,
+            "average_rating": movie.avg_rating,
+            "ratings_count": movie.rating_count,
+        }
     
     def update_movie(self, movie_id: int, data: dict) -> Movie:
         # 1. Validate movie exists
@@ -121,25 +136,24 @@ class MovieService:
             raise HTTPException(status_code=404, detail="Movie not found")
 
         # 2. Validate director exists
-        director = self.director_repo.get(model=self.director_repo.session.query(Movie).mapper.class_, entity_id=data["director_id"])
-        director = self.director_repo.session.query(self.director_repo.session.query(Movie).mapper.class_).filter_by(id=data["director_id"]).first()
+        director = self.director_repo.get(Director, data["director_id"])
         if not director:
             raise HTTPException(status_code=400, detail="Invalid director_id")
 
         # 3. Validate genres
         valid_genres = []
         for genre_id in data["genres"]:
-            genre = self.genre_repo.session.query(self.genre_repo.session.query(Movie).mapper.class_).filter_by(id=genre_id).first()
+            genre = self.genre_repo.get(Genre, genre_id)
             if not genre:
                 raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
             valid_genres.append(genre)
 
         # 4. Update movie fields
-        movie = self.movie_repo.update(movie,
+        movie = self.movie_repo.update(
+            movie,
             title=data["title"],
             release_year=data["release_year"],
             description=data["description"],
-            duration_minutes=data["duration_minutes"],
             director_id=data["director_id"],
             cast=data["cast"]
         )
@@ -149,7 +163,17 @@ class MovieService:
         for genre in valid_genres:
             self.movie_genre_repo.add_genre_to_movie(movie.id, genre.id)
 
-        return movie
+        return {
+            "id": movie.id,
+            "title": movie.title,
+            "release_year": movie.release_year,
+            "director": movie.director,
+            "genres": [mg.genre.name for mg in movie.genres],
+            "cast": movie.cast,
+            "average_rating": movie.avg_rating,
+            "ratings_count": movie.rating_count,
+        }
+
     
     def patch_movie(self, movie_id: int, data: dict) -> Movie:
         # 1. Validate movie exists
@@ -159,9 +183,7 @@ class MovieService:
 
         # 2. Validate director if provided
         if data.get("director_id") is not None:
-            director = self.director_repo.session.query(
-                self.director_repo.session.query(Movie).mapper.class_
-            ).filter_by(id=data["director_id"]).first()
+            director = self.director_repo.get(Director, data["director_id"])
             if not director:
                 raise HTTPException(status_code=400, detail="Invalid director_id")
 
@@ -169,9 +191,7 @@ class MovieService:
         if data.get("genres") is not None:
             valid_genres = []
             for genre_id in data["genres"]:
-                genre = self.genre_repo.session.query(
-                    self.genre_repo.session.query(Movie).mapper.class_
-                ).filter_by(id=genre_id).first()
+                genre = self.genre_repo.get(Genre, genre_id)
                 if not genre:
                     raise HTTPException(status_code=400, detail=f"Invalid genre_id: {genre_id}")
                 valid_genres.append(genre)
@@ -184,7 +204,16 @@ class MovieService:
         # 4. Update only provided fields
         movie = self.movie_repo.update(movie, **{k: v for k, v in data.items() if k != "genres"})
 
-        return movie
+        return {
+            "id": movie.id,
+            "title": movie.title,
+            "release_year": movie.release_year,
+            "director": movie.director,
+            "genres": [mg.genre.name for mg in movie.genres],
+            "cast": movie.cast,
+            "average_rating": movie.avg_rating,
+            "ratings_count": movie.rating_count,
+        }
     
     def delete_movie(self, movie_id: int) -> bool:
         # 1. Validate movie exists
@@ -220,7 +249,7 @@ class MovieService:
         self.movie_repo.update_rating_aggregates(movie_id, score)
 
         return {
-            "movie_rating": rating.id,
+            "rating_id": rating.id,
             "movie_id": movie_id,
             "score": score,
             "created_at": rating.created_at
