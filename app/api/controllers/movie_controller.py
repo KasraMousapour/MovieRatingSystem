@@ -1,10 +1,11 @@
 # api/controllers/movie_controller.py
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from db.session import get_db
 from services.movie_service import MovieService
+from repositories import *
 from api.controllers_schemas.movie_schema import *
 from datetime import datetime
+from api.deps import get_movie_service
 
 router = APIRouter()
 
@@ -16,9 +17,8 @@ def list_movies(
     release_year: int = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
-    session: Session = Depends(get_db)
+    service: MovieService = Depends(get_movie_service)
 ):
-    service = MovieService(session)
     return service.list_movies(
         title=title,
         director_name=director_name,
@@ -29,45 +29,66 @@ def list_movies(
     )
 
 @router.get("/{movie_id}", response_model=MovieResponse)
-def get_movie_detail(movie_id: int, session: Session = Depends(get_db)):
-    service = MovieService(session)
+def get_movie_detail(movie_id: int, service: MovieService = Depends(get_movie_service)):
     movie = service.get_movie_detail(movie_id)
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
     return movie
 
 @router.post("/", response_model=MovieResponse)
-def create_movie(payload: MovieCreate, session: Session = Depends(get_db)):
-    service = MovieService(session)
-    movie = service.create_movie(payload.dict())
-    return movie
+def create_movie(payload: MovieCreate, service: MovieService = Depends(get_movie_service)):
+    try:
+        movie = service.create_movie(payload.dict())
+        return movie
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.put("/{movie_id}", response_model=MovieUpdateResponse)
-def update_movie(movie_id: int, payload: MovieUpdate, session: Session = Depends(get_db)):
-    service = MovieService(session)
-    movie = service.update_movie(movie_id, payload.dict())
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-    movie["updated_at"] = datetime.now()
-    return movie
+def update_movie(movie_id: int, payload: MovieUpdate, service: MovieService = Depends(get_movie_service)):
+    try:
+        movie = service.update_movie(movie_id, payload.dict())
+        if not movie:
+            raise LookupError("Movie not found")
+        movie["updated_at"] = datetime.now()
+        return movie
+    except LookupError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.patch("/{movie_id}", response_model=MovieResponse)
-def patch_movie(movie_id: int, payload: MoviePatch, session: Session = Depends(get_db)):
-    service = MovieService(session)
-    movie = service.patch_movie(movie_id, payload.dict(exclude_unset=True))
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-    return movie
+def patch_movie(movie_id: int, payload: MoviePatch, service: MovieService = Depends(get_movie_service)):
+    try:
+        movie = service.patch_movie(movie_id, payload.dict(exclude_unset=True))
+        if not movie:
+            raise LookupError("Movie not found")
+        movie["updated_at"] = datetime.now()
+        return movie
+    except LookupError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.delete("/{movie_id}", status_code=204)
-def delete_movie(movie_id: int, session: Session = Depends(get_db)):
-    service = MovieService(session)
-    success = service.delete_movie(movie_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Movie not found")
-    return None  # 204 No Content
+def delete_movie(movie_id: int, service: MovieService = Depends(get_movie_service)):
+    try:
+        success = service.delete_movie(movie_id)
+        if not success:
+            raise LookupError("Movie not found")
+        return None
+    except LookupError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+    
 @router.post("/{movie_id}/rating", response_model=MovieRatingResponse)
-def rate_movie(movie_id: int, payload: MovieRatingCreate, session: Session = Depends(get_db)):
-    service = MovieService(session)
+def rate_movie(movie_id: int, payload: MovieRatingCreate, service: MovieService = Depends(get_movie_service)):
     return service.submit_rating(movie_id, payload.score)
 

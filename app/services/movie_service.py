@@ -1,5 +1,4 @@
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_
+from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from repositories import *
 from models import *
