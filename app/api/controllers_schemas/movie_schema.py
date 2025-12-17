@@ -32,13 +32,12 @@ class MovieUpdateResponse(MovieResponse):
     updated_at: datetime
 
 class MoviePatch(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=200)
-    release_year: Optional[int] = Field(None, ge=1888, le=2100)
-    description: Optional[str] = Field(None, min_length=1)
-    duration_minutes: Optional[int] = Field(None, ge=1)
-    director_id: Optional[int] = Field(None, ge=1)
-    cast: Optional[str] = Field(None, min_length=1)
-    genres: Optional[List[int]] = Field(None, min_items=1)    
+    title: str|None = None
+    release_year: int | None = None
+    description: str | None = None
+    director_id: int | None = None
+    cast: str | None = None
+    genres: List[int] | None = None   
 
 class MovieRatingCreate(BaseModel):
     score: int = Field(..., ge=1, le=10)  # must be between 1 and 10

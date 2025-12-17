@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from repositories import *
-from models import *
+from app.repositories import *
+from app.models import *
 
 class MovieService:
     def __init__(self, movie_repo: MovieRepository, director_repo: DirectorRepository, 

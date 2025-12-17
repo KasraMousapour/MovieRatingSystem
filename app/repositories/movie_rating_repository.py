@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.movie_rating import MovieRating
-from repositories import BaseRepository
+from app.models.movie_rating import MovieRating
+from app.repositories import BaseRepository
 
 class MovieRatingRepository(BaseRepository):
     def __init__(self, session: Session):

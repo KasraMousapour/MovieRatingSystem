@@ -1,7 +1,7 @@
 # app/repositories/movie_repository.py
 from sqlalchemy.orm import Session, joinedload
-from models import Movie, MovieGenre
-from repositories import BaseRepository
+from app.models import Movie, MovieGenre
+from app.repositories import BaseRepository
 
 class MovieRepository(BaseRepository):
     def __init__(self, session: Session):

@@ -3,9 +3,9 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from db.session import get_db
-from repositories import *
-from services.movie_service import MovieService
+from app.db.session import get_db
+from app.repositories import *
+from app.services.movie_service import MovieService
 
 def get_movie_repository(db: Session = Depends(get_db)) -> MovieRepository:
     return MovieRepository(db)

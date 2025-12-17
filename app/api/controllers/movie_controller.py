@@ -1,11 +1,11 @@
 # api/controllers/movie_controller.py
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from services.movie_service import MovieService
-from repositories import *
-from api.controllers_schemas.movie_schema import *
+from app.services.movie_service import MovieService
+from app.repositories import *
+from app.api.controllers_schemas.movie_schema import *
 from datetime import datetime
-from api.deps import get_movie_service
+from app.api.deps import get_movie_service
 
 router = APIRouter()
 

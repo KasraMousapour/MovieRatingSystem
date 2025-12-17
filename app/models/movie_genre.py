@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from db.base import Base
+from app.db.base import Base
 
 class MovieGenre(Base):
     __tablename__ = "movie_genres"

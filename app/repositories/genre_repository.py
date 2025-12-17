@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models.genre import Genre
-from repositories import BaseRepository
+from app.models.genre import Genre
+from app.repositories import BaseRepository
 
 class GenreRepository(BaseRepository):
     def __init__(self, session: Session):
