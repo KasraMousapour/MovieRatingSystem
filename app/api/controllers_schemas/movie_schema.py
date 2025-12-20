@@ -40,7 +40,7 @@ class MoviePatch(BaseModel):
     genres: List[int] | None = None   
 
 class MovieRatingCreate(BaseModel):
-    score: int = Field(..., ge=1, le=10)  # must be between 1 and 10
+    score: int  # must be between 1 and 10
 
 class MovieRatingResponse(BaseModel):
     rating_id: int

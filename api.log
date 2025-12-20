@@ -1,0 +1,6 @@
+2025-12-17 16:53:56 - api - INFO - List movies called with filters: title=None, director=None, genre=None, year=None, page=1, page_size=10
+2025-12-17 16:53:57 - api - DEBUG - List movies returned 10 items
+2025-12-17 16:57:09 - api - INFO - Rating movie(movie_id=1001, rating=15, route=api/v1/movies/1001/rating)
+2025-12-17 16:57:10 - api - WARNING - Invalid rating value (movie_id=1001, rating=15, route=api/v1/movies/1001/rating) 
+2025-12-17 16:58:13 - api - INFO - Rating movie(movie_id=1001, rating=8, route=api/v1/movies/1001/rating)
+2025-12-17 16:58:13 - api - INFO - Rating saved successfully (movie_id=1001, rating=8)
