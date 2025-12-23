@@ -1,6 +1,6 @@
 # Movie Rating System
 
-A movie rating system built with FastAPI, PostgreSQL.The project involves designing and implementing a backend system that maintains and manages information about movies, directors, genres, and user ratings. The data stored in a PostgreSQL database and the necessary operations performed through FastAPI-based APIs.
+A movie rating system built with FastAPI, PostgreSQL.The project involves designing and implementing a backend system that maintains and manages information about movies, directors, genres, and user ratings. The data stored in a PostgreSQL database and the necessary operations performed through FastAPI-based APIs.In this project for two endpoints have written logging.
 
 ## 🏗️ Architecture
 
