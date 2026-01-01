@@ -1,0 +1,30 @@
+services:
+  # PostgreSQL database
+  db:
+    image: postgres:15
+    container_name: movieratingsystem_db
+    environment:
+      POSTGRES_USER: kasra
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # FastAPI application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: movieratingsystem_app
+    environment:
+      DATABASE_URL: postgresql://kasra:secret123@db:5432/mydb
+    ports:
+      - "8002:8002"
+    depends_on:
+      - db
+      
+
+volumes:
+  pg_data:
